@@ -1,5 +1,13 @@
 version: "3.8"
 
+volumes: #se crean los volumenes en docker
+  vol-emqx-data:
+    name: foo-emqx-data
+  vol-emqx-etc:
+    name: foo-emqx-etc
+  vol-emqx-log:
+    name: foo-emqx-log
+
 services:
   emqx:
     container_name: emqx
@@ -9,8 +17,16 @@ services:
       - ${EMQX_DASH_PORT}:18083 ## dashboard emqx
       - 8083:8083 ##webSocket inseguro
     environment:
-      # listener.tcp.external.max_connections = 1024000 #maximo de conexion 1883 tcp inseura, conexion esp32 insegura
-      EMQX_LISTENER__TCP__EXTERNAL__MAX_CONNECTIONS: ${EMQX_LISTENER__TCP__EXTERNAL__MAX_CONNECTIONS} 
+      EMQX_NAME: ${EMQX_NAME}
+      EMQX_HOST: ${EMQX_HOST}      
+      EMQX_LISTENER__TCP__EXTERNAL__MAX_CONNECTIONS: ${EMQX_LISTENER__TCP__EXTERNAL__MAX_CONNECTIONS}
+      TZ: "${TZ}"
+      EMQX_DASHBOARD__DEFAULT_USER__LOGIN: ${EMQX_DASHBOARD__DEFAULT_USER__LOGIN}
+      EMQX_DASHBOARD__DEFAULT_USER__PASSWORD: ${EMQX_DASHBOARD__DEFAULT_USER__PASSWORD}
+    volumes: #persistencia de los datos discos duros administrados por docker
+      - vol-emqx-data:/opt/emqx/data
+      - vol-emqx-etc:/opt/emqx/etc
+      - vol-emqx-log:/opt/emqx/log
       
 
 
