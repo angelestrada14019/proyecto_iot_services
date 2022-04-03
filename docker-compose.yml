@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  emqx:
+    container_name: emqx
+    image: emqx/emqx:4.4.2
+    restart: always
+    ports:
+      - ${EMQX_DASH_PORT}:18083 ## dashboard emqx
+      - 8083:8083 ##webSocket inseguro
+    environment:
+      # listener.tcp.external.max_connections = 1024000 #maximo de conexion 1883 tcp inseura, conexion esp32 insegura
+      EMQX_LISTENER__TCP__EXTERNAL__MAX_CONNECTIONS: ${EMQX_LISTENER__TCP__EXTERNAL__MAX_CONNECTIONS} 
+      
+
+
+    
