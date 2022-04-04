@@ -9,10 +9,23 @@ volumes: #se crean los volumenes en docker
     name: foo-emqx-log
 
 services:
+  mongo:
+    container_name: mongo
+    image: mongo:5.0.6
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "root"
+      MONGO_INITDB_ROOT_PASSWORD: "02102910"
+      TZ: "${TZ}"
+    volumes:
+      - ./mongo_data:/data/db
+    ports:
+      - 27017:27017
+
   emqx:
     container_name: emqx
     image: emqx/emqx:4.4.2
-    restart: always
+    restart: unless-stopped
     ports:
       - ${EMQX_DASH_PORT}:18083 ## dashboard emqx
       - 8083:8083 ##webSocket inseguro
