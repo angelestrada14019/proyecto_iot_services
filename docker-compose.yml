@@ -1,12 +1,12 @@
 version: "3.8"
 
-volumes: #se crean los volumenes en docker
-  vol-emqx-data:
-    name: foo-emqx-data
-  vol-emqx-etc:
-    name: foo-emqx-etc
-  vol-emqx-log:
-    name: foo-emqx-log
+# volumes: #se crean los volumenes en docker
+#   vol-emqx-data:
+#     name: foo-emqx-data
+#   vol-emqx-etc:
+#     name: foo-emqx-etc
+#   vol-emqx-log:
+#     name: foo-emqx-log
 
 services:
   mongo:
@@ -24,11 +24,20 @@ services:
 
   emqx:
     container_name: emqx
-    image: emqx/emqx:4.4.2
+    image: emqx/emqx:4.2.3 #4.4.2
     restart: unless-stopped
     ports:
       - ${EMQX_DASH_PORT}:18083 ## dashboard emqx
+      - 18084:18084 # dashbord con ssl
+      - 1883:1883 
+      - 8883:8883
       - 8083:8083 ##webSocket inseguro
+      - 8084:8084 
+      - 8085:8081 
+
+    links: #se conectan los servicios
+      - mongo
+
     environment:
       EMQX_NAME: ${EMQX_NAME}
       EMQX_HOST: ${EMQX_HOST}      
@@ -36,10 +45,40 @@ services:
       TZ: "${TZ}"
       EMQX_DASHBOARD__DEFAULT_USER__LOGIN: ${EMQX_DASHBOARD__DEFAULT_USER__LOGIN}
       EMQX_DASHBOARD__DEFAULT_USER__PASSWORD: ${EMQX_DASHBOARD__DEFAULT_USER__PASSWORD}
-    volumes: #persistencia de los datos discos duros administrados por docker
-      - vol-emqx-data:/opt/emqx/data
-      - vol-emqx-etc:/opt/emqx/etc
-      - vol-emqx-log:/opt/emqx/log
+
+      #Auth mqx config
+      EMQX_ALLOW__ANONYMOUS: "false" #poder conectarme con credenciales     
+      EMQX_ACL__NOMATCH: "deny" #no poder conectarse a todos los topicos
+      #reconeccion automatica, mensajes retenidos, controla la api de mqx, levanta el dashboard, autenticacion mongo
+      EMQX_LOADER__PLUGINS: "emqx_recon, emqx_retainer, emqx_management, emqx_dashboard, emqx_auth_mongo" #plugins que se van a cargar al iniciar emqx
+
+      #Mongo connection
+      EMQX_AUTH__MONGO__TYPE: single #tipo de coneccion
+      EMQX_AUTH__MONGO__SERVER: "mongo:27017" #direccion del servidor, tener acceso a la base de datos
+      EMQX_AUTH__MONGO__POOL: 8 #numero de conexiones para distribuir la carga en caso de muchas consultas
+      EMQX_AUTH__MONGO__LOGIN: "root" #nombre de usuario en mongo
+      EMQX_AUTH__MONGO__PASSWORD: "02102910" #contraseña de mongo
+      EMQX_AUTH__MONGO__AUTH_SOURCE: admin 
+      EMQX_AUTH__MONGO__DATABASE: "api-iot" #nombre de la base de datos
+      #enable acl query, listas de control de acceso
+      EMQX_AUTH__MONGO__ACL_QUERY: "on" #activar query de acl
+      EMQX_AUTH__MONGO__ACL_QUERY__COLLECTION: "emqx_auth_rules" #nombre de la coleccion de acl
+      EMQX_AUTH__MONGO__ACL_QUERY__SELECTOR: "username=%u" #donde esta el nombre de usuario
+      # Donde encontrar los usuarios
+      EMQX_AUTH__MONGO__AUTH_QUERY__COLLECTION: "emqx_auth_rules" #nombre de la coleccion donde estan las credenciales
+      EMQX_AUTH__MONGO__AUTH_QUERY__PASSWORD_HASH: plain #tipo de hash para la contraseña
+      EMQX_AUTH__MONGO__AUTH_QUERY__PASSWORD_FIELD: "password" #nombre del campo donde esta la contraseña
+      EMQX_AUTH__MONGO__AUTH_QUERY__SELECTOR: "username=%u" #donde encontrar contraseña normal
+      #Donde encontrar super usuarios en mongo
+      EMQX_AUTH__MONGO__SUPER_QUERY__COLLECTION: "emqx_auth_rules" #nombre de la coleccion donde estan las credenciales de super usuario
+      EMQX_AUTH__MONGO__SUPER_QUERY__SUPER_FIELD: "is_super_user" #nombre del campo que indica si es super usuario
+      EMQX_AUTH__MONGO__SUPER_QUERY_SELECTOR: "username=%u" #formato de la consulta para obtener el super usuario
+      EMQX_AUTH__MONGO__SUPER_QUERY: "off" #apago la busqueda de super usuario
+
+    # volumes: #persistencia de los datos discos duros administrados por docker
+    #   - vol-emqx-data:/opt/emqx/data
+    #   - vol-emqx-etc:/opt/emqx/etc
+    #   - vol-emqx-log:/opt/emqx/log
       
 
 
