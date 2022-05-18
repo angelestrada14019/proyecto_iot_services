@@ -1,0 +1,101 @@
+version: "3.8"
+
+volumes: 
+  vol-emqx-data:
+    name: foo-emqx-data
+  # vol-emqx-etc:
+  #   name: foo-emqx-etc
+  vol-emqx-log:
+    name: foo-emqx-log
+
+services:
+  node:
+    container_name: node
+    image: "node:14"
+    restart: always
+    working_dir: /home/node/app
+    volumes:
+      - ./mycode/index.js:/home/node/app/index.js
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+      - "80:3002"
+
+    link:
+      - emqx
+      - mongo
+
+    command: sh -c "node index.js"
+  mongo:
+    container_name: mongo
+    image: mongo:5.0.6
+    restart: always
+    environment:
+      TZ: "${TZ}"
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USERNAME}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD}"
+    volumes:
+      - ./mongo_data:/data/db
+    ports:
+      - ${MONGO_EXT_PORT}:27017
+
+  emqx:
+    container_name: emqx
+    image: emqx/emqx:4.2.3 
+    restart: unless-stopped
+    ports:
+      - ${EMQX_DASH_PORT}:18083 
+      - 18084:18084 
+      - 1883:1883 
+      - 8883:8883
+      - 8083:8083 
+      - 8085:8081 
+
+    volumes: 
+      - vol-emqx-data:/opt/emqx/data
+      # - vol-emqx-etc:/opt/emqx/etc
+      - vol-emqx-log:/opt/emqx/log
+
+    links: 
+      - mongo
+    
+    extra_hosts: 
+      - "localhost:192.168.0.6"
+
+    environment:
+      EMQX_NAME: ${EMQX_NAME}
+      EMQX_HOST: ${EMQX_HOST}      
+      EMQX_LISTENER__TCP__EXTERNAL__MAX_CONNECTIONS: ${EMQX_LISTENER__TCP__EXTERNAL__MAX_CONNECTIONS}
+      TZ: "${TZ}"
+      EMQX_DASHBOARD__DEFAULT_USER__LOGIN: ${EMQX_DASHBOARD__DEFAULT_USER__LOGIN}
+      EMQX_DASHBOARD__DEFAULT_USER__PASSWORD: ${EMQX_DASHBOARD__DEFAULT_USER__PASSWORD}
+      EMQX_MANAGEMENT__DEFAULT_APPLICATION__SECRET: "${EMQX_MANAGEMENT__DEFAULT_APPLICATION__SECRET}"
+
+      #Auth mqx config
+      EMQX_ALLOW__ANONYMOUS: "false"     
+      EMQX_ACL__NOMATCH: "deny" 
+      #reconeccion automatica, mensajes retenidos, controla la api de mqx, levanta el dashboard, autenticacion mongo
+      EMQX_LOADED_PLUGINS: "emqx_recon,emqx_retainer,emqx_management,emqx_dashboard,emqx_auth_mongo" 
+
+      #Mongo connection
+      EMQX_AUTH__MONGO__TYPE: single #tipo de coneccion
+      EMQX_AUTH__MONGO__SERVER: "mongo:${MONGO_EXT_PORT}" 
+      EMQX_AUTH__MONGO__POOL: 8
+      EMQX_AUTH__MONGO__LOGIN: "${MONGO_USERNAME}" 
+      EMQX_AUTH__MONGO__PASSWORD: "${MONGO_PASSWORD}" 
+      EMQX_AUTH__MONGO__AUTH_SOURCE: admin 
+      EMQX_AUTH__MONGO__DATABASE: "api-iot" 
+      #enable acl query, listas de control de acceso
+      EMQX_AUTH__MONGO__ACL_QUERY: "on" 
+      EMQX_AUTH__MONGO__ACL_QUERY__COLLECTION: "emqxauthrules" 
+      EMQX_AUTH__MONGO__ACL_QUERY__SELECTOR: "username=%u"
+      # Donde encontrar los usuarios
+      EMQX_AUTH__MONGO__AUTH_QUERY__COLLECTION: "emqxauthrules" 
+      EMQX_AUTH__MONGO__AUTH_QUERY__PASSWORD_HASH: plain 
+      EMQX_AUTH__MONGO__AUTH_QUERY__PASSWORD_FIELD: "password" 
+      EMQX_AUTH__MONGO__AUTH_QUERY__SELECTOR: "username=%u" 
+      #Donde encontrar super usuarios en mongo
+      EMQX_AUTH__MONGO__SUPER_QUERY__COLLECTION: "emqxauthrules" 
+      EMQX_AUTH__MONGO__SUPER_QUERY__SUPER_FIELD: "is_super_user" 
+      EMQX_AUTH__MONGO__SUPER_QUERY_SELECTOR: "username=%u" 
+      EMQX_AUTH__MONGO__SUPER_QUERY: "off" 
