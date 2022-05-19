@@ -9,7 +9,7 @@ volumes:
 services:
   node:
     container_name: node
-    image: "node:16"
+    image: "node:14"
     restart: always
     working_dir: /home/node/app
     volumes:
@@ -27,7 +27,7 @@ services:
   mongo:
     container_name: mongo
     restart: always
-    image: mongo:5.0.6
+    image: mongo:4.4
     environment:
       TZ: "${TZ}"
       MONGO_INITDB_ROOT_USERNAME: "${MONGO_USERNAME}"
@@ -41,6 +41,8 @@ services:
     container_name: emqx
     image: emqx/emqx:4.2.3 
     restart: always
+    expose:
+      - 8085
     ports:
       - ${EMQX_DASH_PORT}:18083 
       - 18084:18084 
