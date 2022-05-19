@@ -23,11 +23,13 @@ services:
       - emqx
       - mongo
 
-    command: sh -c "npm run build && npm run start"
+    command: sh -c "echo 'delaying 30 seconds' && sleep 30 && npm run start"
   mongo:
     container_name: mongo
     restart: always
     image: mongo:4.4
+    logging:
+      driver: "none"
     environment:
       TZ: "${TZ}"
       MONGO_INITDB_ROOT_USERNAME: "${MONGO_USERNAME}"
@@ -45,9 +47,7 @@ services:
       - 8085
     ports:
       - ${EMQX_DASH_PORT}:18083 
-      - 18084:18084 
       - 1883:1883 
-      - 8883:8883
       - 8083:8083 
       - 8085:8081 
 
