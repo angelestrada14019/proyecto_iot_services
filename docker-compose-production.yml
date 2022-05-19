@@ -76,7 +76,7 @@ services:
 
       #Mongo connection
       EMQX_AUTH__MONGO__TYPE: single #tipo de coneccion
-      EMQX_AUTH__MONGO__SERVER: "mongo:${MONGO_EXT_PORT}" 
+      EMQX_AUTH__MONGO__SERVER: "mongo:${EMQX_AUTH__MONGO__SERVER}" 
       EMQX_AUTH__MONGO__POOL: 8
       EMQX_AUTH__MONGO__LOGIN: "${MONGO_USERNAME}" 
       EMQX_AUTH__MONGO__PASSWORD: "${MONGO_PASSWORD}" 

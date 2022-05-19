@@ -5,8 +5,8 @@ volumes: #se crean los volumenes en docker
     name: foo-emqx-data
   # vol-emqx-etc:
   #   name: foo-emqx-etc
-  vol-emqx-log:
-    name: foo-emqx-log
+  # vol-emqx-log:
+  #   name: foo-emqx-log
 
 services:
   mongo:
@@ -37,7 +37,7 @@ services:
     volumes: #persistencia de los datos discos duros administrados por docker
       - vol-emqx-data:/opt/emqx/data
       # - vol-emqx-etc:/opt/emqx/etc
-      - vol-emqx-log:/opt/emqx/log
+      # - vol-emqx-log:/opt/emqx/log
 
     links: #se conectan los servicios
       - mongo
@@ -62,7 +62,7 @@ services:
 
       #Mongo connection
       EMQX_AUTH__MONGO__TYPE: single #tipo de coneccion
-      EMQX_AUTH__MONGO__SERVER: "mongo:${MONGO_EXT_PORT}" #direccion del servidor, tener acceso a la base de datos
+      EMQX_AUTH__MONGO__SERVER: "mongo:${EMQX_AUTH__MONGO__SERVER}" #direccion del servidor, tener acceso a la base de datos
       EMQX_AUTH__MONGO__POOL: 8 #numero de conexiones para distribuir la carga en caso de muchas consultas
       EMQX_AUTH__MONGO__LOGIN: "${MONGO_USERNAME}" #nombre de usuario en mongo
       EMQX_AUTH__MONGO__PASSWORD: "${MONGO_PASSWORD}" #contraseña de mongo
