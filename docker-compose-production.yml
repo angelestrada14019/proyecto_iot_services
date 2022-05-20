@@ -10,7 +10,7 @@ services:
   node:
     container_name: node
     image: "node:14"
-    restart: always
+    # restart: always
     working_dir: /home/node/app
     volumes:
       - ./app:/home/node/app
@@ -23,13 +23,14 @@ services:
       - emqx
       - mongo
 
-    command: sh -c "echo 'delaying 30 seconds' && sleep 30 && npm run start"
+    command: sh -c "npm run build && npm run start"
+   # command: sh -c "echo 'delaying 30 seconds' && sleep 30 && npm run start"
   mongo:
     container_name: mongo
-    restart: always
+    # restart: always
     image: mongo:4.4
-    logging:
-      driver: "none"
+    # logging:
+    #   driver: "none"
     environment:
       TZ: "${TZ}"
       MONGO_INITDB_ROOT_USERNAME: "${MONGO_USERNAME}"
@@ -42,7 +43,7 @@ services:
   emqx:
     container_name: emqx
     image: emqx/emqx:4.2.3 
-    restart: always
+    # restart: always
     expose:
       - 8085
     ports:
